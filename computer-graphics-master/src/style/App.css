@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.radioContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.kContainer {
+  margin: 5px;
+}
+
+.active {
+  font-weight: 500;
+}
+
+.fas {
+  color: #2e2e2e;
+}
+
+.custom-range::-webkit-slider-thumb {
+  background: #2e2e2e;;
+}
+
+.reference-paragraph-text {
+  line-height: 35px;
+  font-size: 18px;
+}
+
+.center {
+  margin: 0 auto;
+}
+
+.my-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.my-button {
+  color: grey;
+}
