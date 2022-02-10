@@ -4,7 +4,6 @@ import Point from "../utils/Point";
 import Konva from "konva";
 import { MDBBtn, MDBContainer } from "mdbreact";
 import ReactTooltip from "react-tooltip";
-import { setInterval } from "timers";
 
 interface AffineProps {
   height: number;
@@ -26,7 +25,9 @@ function multiplyMatrix(a: number[][], b: number[][]) {
 }
 
 const degreesToRadians = (degrees: number) => degrees * (Math.PI / 180);
-let i = 0;
+let i = 1;
+let _scale = 1;
+const eps = 0.00000005;
 
 const AffineTransformationsComponent: React.FC<AffineProps> = (
   props: AffineProps
@@ -85,7 +86,7 @@ const AffineTransformationsComponent: React.FC<AffineProps> = (
       ],
       [translatePoint(hexagonPoint).x, translatePoint(hexagonPoint).y, 1],
     ]);
-  }, [hexagonPoint, radius]);
+  }, [hexagonPoint, radius, ]);
 
   const translatePoint = (point: Point, gridSnapSize = snapSize): Point => {
     return new Point(
@@ -275,21 +276,33 @@ const AffineTransformationsComponent: React.FC<AffineProps> = (
   };
 
   const handleClick = () => {
-    //const tweenDuration = 5;
-    //let hexagonLine = hexagonLineRef.current!;
-    //const updatedSnapSize = snapSize / Math.sqrt(scale);
-    // const snapSizeDifference = (updatedSnapSize - snapSize) / 60 / tweenDuration;
     setDeg(rotationAngle);
     spin = setInterval(() => {
+      console.log(spin);
+      console.log(rotationAngle, scale);
+      if (rotationAngle !== 0)
+        _scale *= Math.pow(scale, 1.0 / rotationAngle);
+      else
+        _scale *= Math.pow(scale, 1.0 / 20);
+      if (scale <= 0)
+        _scale = 1;
+      if (i > rotationAngle)
+        i = 0;
       let _rotateMatrix = [
         [Math.cos(degreesToRadians(i)), Math.sin(degreesToRadians(i)), 0],
         [-Math.sin(degreesToRadians(i)), Math.cos(degreesToRadians(i)), 0],
         [0, 0, 1],
       ];
+      let _scaleMatrix = [
+        [_scale, 0, 0],
+        [0, _scale, 0],
+        [0, 0, 1],
+      ];
       setRotateMatrix(_rotateMatrix);
+      console.log("iteration rotation = " + i + " scale: " + _scale);
       let newPoints = hexagonPoints;
       let moveAndRotate = multiplyMatrix(moveMatrix, _rotateMatrix);
-      let scaleAndRotate = multiplyMatrix(moveAndRotate, scaleMatrix);
+      let scaleAndRotate = multiplyMatrix(moveAndRotate, _scaleMatrix);
       let transformMatrix = multiplyMatrix(scaleAndRotate, movebackMatrix);
       setHexagonPoints(multiplyMatrix(newPoints, transformMatrix));
       setHexagonCenter(
@@ -298,8 +311,16 @@ const AffineTransformationsComponent: React.FC<AffineProps> = (
           (hexagonPoints[0][1] + hexagonPoints[3][1]) / 2
         )
       );
-      i < deg && ++i;
+      i <= rotationAngle && ++i;
+      if (i > rotationAngle && (_scale >= scale - eps)) {
+        console.log(i, rotationAngle);
+        console.log(spin);
+        i = 1;
+        _scale = 1;
+        clearInterval(spin);
+      }
     }, 50);
+    console.log(spin);
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -502,6 +523,7 @@ const AffineTransformationsComponent: React.FC<AffineProps> = (
                 hexagonPoints[6][1],
               ]}
               stroke={"red"}
+              closed={true} 
             />
           </Layer>
           <Layer></Layer>
